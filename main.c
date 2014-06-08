@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <argtable2.h>
+#include "bmp.h"
 #include "main.h"
 
 int
@@ -57,11 +58,15 @@ main(int argc, char **argv)
         printf("Wrong parameter values\n");
         return 1;
     }
+    
+    BITMAPINFOHEADER bitmapInfoHeader;
+    unsigned char *bitmapData;
+    bitmapData = LoadBitmapFile(in->filename[0], &bitmapInfoHeader);
 
     return 0;
 }
 
-image_t * 
+image_t *
 BMP_read(char * filename, uint32_t width, uint32_t height) {
     int i, j;
 
@@ -70,11 +75,11 @@ BMP_read(char * filename, uint32_t width, uint32_t height) {
     bmpimage->width = width;
     bmpimage->height = height;
     bmpimage->data = malloc(bmpimage->width * sizeof(pixel_t *));
-    
+
     // Get the total size in bytes of the image (including header)
     fseek(f, 0L, SEEK_END);
     int total_size = ftell(f);
-    
+
     printf("%d\n", total_size);
     printf("%d\n", bmpimage->width * bmpimage->height);
     bmpimage->header_size = total_size - (bmpimage->width * bmpimage->height);
@@ -100,13 +105,13 @@ BMP_read(char * filename, uint32_t width, uint32_t height) {
     return bmpimage;
 }
 
-void 
+void
 BMP_write(image_t * image) {
     int i, j;
 
     FILE *file;
     file = fopen("generated_bitmap.bmp", "w+");
-  
+
 
     fwrite(image->header, image->header_size, 1, file);
 
