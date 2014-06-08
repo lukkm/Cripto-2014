@@ -8,6 +8,8 @@ main(int argc, char **argv)
 {
     int i, j;
 
+    struct arg_lit * distribute = arg_lit0("d", "distribute", "Distribute the secret image");
+
     if (argc < 4) {
         printf("Usage: %s filename width height.\n", argv[0]);
         return 1;
