@@ -1,1 +1,1 @@
-encript.h
+image_t * encript(image_t secret, char* directory, int k);image_t * recover(char * directory, int k);void recover_block(image_t * secret_image, image_t ** images, int k, int block_position, int image_count);void recover_block2(image_t * secret_image, image_t ** images, int block_position, int image_count);
