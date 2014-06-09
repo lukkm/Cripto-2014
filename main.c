@@ -59,20 +59,14 @@ main(int argc, char **argv)
         return 1;
     }
     
-    BITMAPINFOHEADER bitmapInfoHeader;
-    unsigned char *bitmapData;
-    bitmapData = load_bitmap_file(in->filename[0], &bitmapInfoHeader);
+    BITMAPINFOHEADER bitmap_info_header;
+    BITMAPFILEHEADER bitmap_file_header;
+    unsigned char * bitmap_data;
+    bitmap_data = load_bitmap_file(in->filename[0], &bitmap_file_header, &bitmap_info_header);
+
+    print_matrix(bitmap_data, bitmap_info_header);
 
     return 0;
 }
 
-void
-BMP_print_matrix(image_t * bmpimage) {
-    int i, j;
-    for (i = 0; i < bmpimage->width; i++) {
-        for (j = 0; j < bmpimage->height; j++) {
-            printf("%d ", bmpimage->data[i][j]);
-        }
-        printf("\n");
-    }
-}
+
