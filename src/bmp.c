@@ -28,7 +28,7 @@ load_bitmap_file(const char *filename) {
     fseek(file_ptr, image->file_header.b_off_bits, SEEK_SET);
 
     // Allocate enough memory for the bitmap image data
-    image->bitmap = (unsigned char*) malloc(image->info_header.bi_size_image);
+    image->bitmap = (unsigned char*) malloc(image->info_header.bi_width * image->info_header.bi_height);
 
     // Verify memory allocation
     if (!image->bitmap) {
@@ -38,7 +38,7 @@ load_bitmap_file(const char *filename) {
     }
 
     // Read in the bitmap image data
-    fread(image->bitmap, image->info_header.bi_size_image, 1, file_ptr);
+    fread(image->bitmap, image->info_header.bi_width * image->info_header.bi_height, 1, file_ptr);
 
     // Make sure bitmap image data was read
     if (image->bitmap == NULL) {
@@ -60,4 +60,18 @@ print_matrix(image_t * image) {
         }
         printf("\n");
     }
+}
+
+void
+write_bitmap_file(image_t * image) {
+
+    FILE * out_f = fopen("recovered_image.bmp", "w+");
+    // Write header
+    fwrite(&image->file_header, sizeof(BITMAPFILEHEADER), 1, out_f);
+    fwrite(&image->info_header, sizeof(BITMAPINFOHEADER), 1, out_f);
+    //Write image
+    int n = fwrite(image->bitmap, image->info_header.bi_width * image->info_header.bi_height, 1, out_f);
+    printf("%d\n", n);
+
+    fclose(out_f);
 }

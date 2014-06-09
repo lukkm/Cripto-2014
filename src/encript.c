@@ -52,9 +52,9 @@ image_t * recovery(const char * directory, int k) {
             image_t * secret_image = (image_t *) malloc(sizeof(image_t));
             memcpy(&secret_image->file_header, &images[0]->file_header, sizeof(BITMAPFILEHEADER));
             memcpy(&secret_image->info_header, &images[0]->info_header, sizeof(BITMAPINFOHEADER));
-            secret_image->bitmap = (unsigned char *) malloc(secret_image->info_header.bi_size_image);
+            secret_image->bitmap = (unsigned char *) malloc(secret_image->info_header.bi_width * secret_image->info_header.bi_height);
             int i;
-            for (i = 0; i < secret_image->info_header.bi_size_image; i += k) {
+            for (i = 0; i < secret_image->info_header.bi_width * secret_image->info_header.bi_height; i += k) {
                 recover_block(secret_image, images, k, i, image_count); 
             }
             return secret_image;
