@@ -81,12 +81,13 @@ recover_block(image_t * secret_image, image_t ** images, int k, int block_positi
 
 void
 recover_block2(image_t * secret_image, image_t ** images, int block_position, int image_count) {
-    char coefficients[image_count][3]; 
+    unsigned char coefficients[image_count][3]; 
     int i, j;
     for (i = 0; i < image_count; i++) {
         coefficients[i][0] = images[i]->bitmap[block_position] >> 4;
-        coefficients[i][1] = images[i]->bitmap[block_position + 1] >> 4;
-        coefficients[i][2] = ((images[i]->bitmap[block_position] & 15) << 4) | (images[i]->bitmap[block_position] & 15);
+        // Shift 5 times to take parity bit out
+        coefficients[i][1] = images[i]->bitmap[block_position + 1] >> 5;
+        coefficients[i][2] = ((images[i]->bitmap[block_position] & 15) << 4) | (images[i]->bitmap[block_position + 1] & 15);
     }
     
     // Take the first item of every equation to 1 to solve the equations.
@@ -105,12 +106,13 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
         }
     }
 
-    if (coefficients[1][0] != 0) {
+    if (coefficients[1][0] != 0 || coefficients[1][1] == 0) {
+        printf("block_position: %d, 0 0: %d, 0 1: %d, 1 0: %d, 1 1: %d\n", block_position, coefficients[0][0], coefficients[0][1], coefficients[1][0], coefficients[1][1]);
         printf("Something went wrong with the equations!\n");
     }
 
     unsigned char y = (coefficients[1][2] * modular_inverse(coefficients[1][1])) % 251;
-    int x_result = coefficients[0][2] - y;
+    int x_result = coefficients[0][2] - ((coefficients[1][2] * y)) % 251;
     x_result = (x_result < 0) ? x_result += 251 : x_result;
     unsigned char x = (x_result * modular_inverse(coefficients[0][1])) % 251;
 

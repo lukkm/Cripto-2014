@@ -70,6 +70,7 @@ write_bitmap_file(image_t * image) {
     fwrite(&image->file_header, sizeof(BITMAPFILEHEADER), 1, out_f);
     fwrite(&image->info_header, sizeof(BITMAPINFOHEADER), 1, out_f);
     //Write image
+    fseek(out_f, image->file_header.b_off_bits, SEEK_SET);
     int n = fwrite(image->bitmap, image->info_header.bi_width * image->info_header.bi_height, 1, out_f);
     printf("%d\n", n);
 
