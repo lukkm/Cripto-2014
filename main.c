@@ -59,12 +59,8 @@ main(int argc, char **argv)
         return 1;
     }
     
-    BITMAPINFOHEADER bitmap_info_header;
-    BITMAPFILEHEADER bitmap_file_header;
-    unsigned char * bitmap_data;
-    bitmap_data = load_bitmap_file(in->filename[0], &bitmap_file_header, &bitmap_info_header);
-
-    print_matrix(bitmap_data, bitmap_info_header);
+    image_t * image = load_bitmap_file(in->filename[0]);
+    print_matrix(image);
 
     return 0;
 }

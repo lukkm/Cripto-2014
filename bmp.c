@@ -2,62 +2,61 @@
 #include <stdio.h>
 #include "bmp.h"
 
-unsigned char *
-load_bitmap_file(const char *filename, BITMAPFILEHEADER * bitmap_file_header, BITMAPINFOHEADER * bitmap_info_header) {
+image_t *
+load_bitmap_file(const char *filename) {
+    image_t * image = malloc(sizeof(image_t));
     FILE * file_ptr; //our file pointer
-    unsigned char *bitmap_image;  //store image data
-    int image_idx=0;  //image index counter
 
-    //open filename in read binary mode
+    // Open file in read binary mode
     file_ptr = fopen(filename,"rb");
     if (file_ptr == NULL)
         return NULL;
 
-    //read the bitmap file header
-    fread(bitmap_file_header, sizeof(BITMAPFILEHEADER),1,file_ptr);
+    // Read the bitmap file header
+    fread(&image->file_header, sizeof(BITMAPFILEHEADER), 1, file_ptr);
 
-    //verify that this is a bmp file by check bitmap id
-    if (bitmap_file_header->bf_type !=0x4D42) {
+    // Verify that this is a bmp file by check bitmap id
+    if (image->file_header.bf_type !=0x4D42) {
         fclose(file_ptr);
         return NULL;
     }
 
-    //read the bitmap info header
-    fread(bitmap_info_header, sizeof(BITMAPINFOHEADER),1,file_ptr); // small edit. forgot to add the closing bracket at sizeof
+    // Read the bitmap info header
+    fread(&image->info_header, sizeof(BITMAPINFOHEADER), 1, file_ptr);
 
-    //move file point to the begging of bitmap data
-    fseek(file_ptr, bitmap_file_header->b_off_bits, SEEK_SET);
+    // Move file point to the begging of bitmap data
+    fseek(file_ptr, image->file_header.b_off_bits, SEEK_SET);
 
-    //allocate enough memory for the bitmap image data
-    bitmap_image = (unsigned char*)malloc(bitmap_info_header->bi_size_image);
+    // Allocate enough memory for the bitmap image data
+    image->bitmap = (unsigned char*) malloc(image->info_header.bi_size_image);
 
-    //verify memory allocation
-    if (!bitmap_image) {
-        free(bitmap_image);
+    // Verify memory allocation
+    if (!image->bitmap) {
+        free(image->bitmap);
         fclose(file_ptr);
         return NULL;
     }
 
-    //read in the bitmap image data
-    fread(bitmap_image,bitmap_info_header->bi_size_image, 1, file_ptr);
+    // Read in the bitmap image data
+    fread(image->bitmap, image->info_header.bi_size_image, 1, file_ptr);
 
-    //make sure bitmap image data was read
-    if (bitmap_image == NULL) {
+    // Make sure bitmap image data was read
+    if (image->bitmap == NULL) {
         fclose(file_ptr);
         return NULL;
     }
 
-    //close file and return bitmap iamge data
+    // Close file and return bitmap iamge data
     fclose(file_ptr);
-    return bitmap_image;
+    return image;
 }
 
 void
-print_matrix(unsigned char * bmpimage, BITMAPINFOHEADER info_header) {
+print_matrix(image_t * image) {
     int i, j;
-    for (i = 0; i < info_header.bi_width; i++) {
-        for (j = 0; j < info_header.bi_height; j++) {
-            printf("%d ", bmpimage[i * info_header.bi_height + j]);
+    for (i = 0; i < image->info_header.bi_width; i++) {
+        for (j = 0; j < image->info_header.bi_height; j++) {
+            printf("%d ", image->bitmap[i * image->info_header.bi_height + j]);
         }
         printf("\n");
     }

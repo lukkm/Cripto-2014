@@ -4,8 +4,7 @@ typedef unsigned int DWORD; //4bytes
 
 #pragma pack(push, 1)
 
-typedef struct tag_BITMAPFILEHEADER
-{
+typedef struct tag_BITMAPFILEHEADER {
     WORD bf_type;  //specifies the file type
     DWORD bf_size;  //specifies the size in bytes of the bitmap file
     WORD bf_reserved1;  //reserved; must be 0
@@ -13,8 +12,7 @@ typedef struct tag_BITMAPFILEHEADER
     DWORD b_off_bits;  //species the offset in bytes from the bitmapfileheader to the bitmap bits
 }BITMAPFILEHEADER;
 
-typedef struct tag_BITMAPINFOHEADER
-{
+typedef struct tag_BITMAPINFOHEADER {
     DWORD bi_size;  //specifies the number of bytes required by the struct
     DWORD bi_width;  //specifies width in pixels
     DWORD bi_height;  //species height in pixels
@@ -28,7 +26,13 @@ typedef struct tag_BITMAPINFOHEADER
     DWORD bi_clr_important;  //number of colors that are important
 }BITMAPINFOHEADER;
 
+typedef struct tag_IMAGE {
+    BITMAPFILEHEADER file_header;
+    BITMAPINFOHEADER info_header;
+    unsigned char * bitmap;
+} image_t;
+
 #pragma pack(pop)
 
-unsigned char * load_bitmap_file(const char *filename, BITMAPFILEHEADER * bitmap_file_header, BITMAPINFOHEADER * bitmap_info_header);
-void print_matrix(unsigned char * bmpimage, BITMAPINFOHEADER info_header);
+image_t * load_bitmap_file(const char *filename);
+void print_matrix(image_t * image);
