@@ -26,36 +26,42 @@ image_t * encript(image_t secret, char* directory, int k) {
   return NULL;
 }
 
-image_t * recover(char * directory, int k) {
+image_t * recovery(const char * directory, int k) {
 	DIR* p_dir;
 	struct dirent *dir;
 	p_dir = opendir(directory);
 	image_t * images[10];
 	int image_count = 0;
+  char * full_path;
 
 	if(p_dir) {
     while ((dir = readdir(p_dir)) != NULL) {
    	 	if(strstr(dir->d_name, ".bmp") && image_count < 10) {
-   	 		images[image_count] = load_bitmap_file(dir->d_name);
+   	 		full_path = calloc(strlen(directory) + strlen(dir->d_name) + 2, 1);
+        strcpy(full_path, directory);
+        strcat(full_path, "/");
+        strcat(full_path, dir->d_name);
+        images[image_count] = load_bitmap_file(full_path);
    	 		image_count++;
+        free(full_path);
    	 	}
     }
     closedir(p_dir);
     
-    if (image_count > k) {
-        image_t * secret_image = (image_t *) malloc(sizeof(images[0]));
-        memcpy(&secret_image->file_header, &images[0]->file_header, sizeof(BITMAPFILEHEADER));
-        memcpy(&secret_image->info_header, &images[0]->info_header, sizeof(BITMAPINFOHEADER));
-        secret_image->bitmap = (unsigned char *) malloc(secret_image->info_header.bi_size_image);
-        int i;
-        for (i = 0; i < secret_image->info_header.bi_size_image; i += k) {
-            recover_block(secret_image, images, k, i, image_count); 
+        if (image_count >= k) {
+            image_t * secret_image = (image_t *) malloc(sizeof(image_t));
+            memcpy(&secret_image->file_header, &images[0]->file_header, sizeof(BITMAPFILEHEADER));
+            memcpy(&secret_image->info_header, &images[0]->info_header, sizeof(BITMAPINFOHEADER));
+            secret_image->bitmap = (unsigned char *) malloc(secret_image->info_header.bi_size_image);
+            int i;
+            for (i = 0; i < secret_image->info_header.bi_size_image; i += k) {
+                recover_block(secret_image, images, k, i, image_count); 
+            }
+            return secret_image;
+        } else {
+            // TODO: Add coherent error message here
+            return NULL;
         }
-        return secret_image;
-    } else {
-        // TODO: Add coherent error message here
-        return NULL;
-    }
   } else {
     return NULL;
   } 
