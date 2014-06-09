@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <argtable2.h>
 #include "bmp.h"
+#include "encript.h"
 #include "main.h"
 
 int

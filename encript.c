@@ -1,8 +1,10 @@
 #include <dirent.h>
 #include <time.h>
 #include <stdlib.h>
+#include <math.h>
+#include "encript.h"
 
-image_t* encript(image_t* secret, char* directory, int k) {
+image_t* encript(image_t* secret, const char* directory, int k) {
 	DIR* p_dir;
 	struct dirent *dir;
 	p_dir = opendir(directory);
@@ -79,10 +81,10 @@ int ld_for_shadow(unsigned char first_byte, unsigned char second_byte, unsigned 
           return 1;
         }
       }
-    } else if () {
-      int first_multiplier = max(first_byte, shadow_bytes[i][0])/min(first_byte, shadow_bytes[i][0]);
-      if( (second_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % second_byte == 0) ) {
-        int second_multiplier = max(first_byte, shadow_bytes[i][1])/min(first_byte, shadow_bytes[i][1]);
+    } else if ( (first_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % first_byte == 0) ) {
+      int first_multiplier = max(first_byte, shadow_bytes[i][1])/min(first_byte, shadow_bytes[i][1]);
+      if( (second_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % second_byte == 0) ) {
+        int second_multiplier = max(first_byte, shadow_bytes[i][0])/min(first_byte, shadow_bytes[i][0]);
         if(first_multiplier == second_multiplier) {
           return 1;
         }
