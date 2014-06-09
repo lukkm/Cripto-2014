@@ -3,65 +3,64 @@
 #include "bmp.h"
 
 unsigned char *
-LoadBitmapFile(char *filename, BITMAPINFOHEADER *bitmapInfoHeader)
-{
-    FILE * filePtr; //our file pointer
-    BITMAPFILEHEADER bitmapFileHeader; //our bitmap file header
-    unsigned char *bitmapImage;  //store image data
-    int imageIdx=0;  //image index counter
-    unsigned char tempRGB;  //our swap variable
+load_bitmap_file(const char *filename, BITMAPINFOHEADER *bitmap_info_header) {
+    FILE * file_ptr; //our file pointer
+    BITMAPFILEHEADER bitmap_file_header; //our bitmap file header
+    unsigned char *bitmap_image;  //store image data
+    int image_idx=0;  //image index counter
+    unsigned char temp_RGB;  //our swap variable
 
     //open filename in read binary mode
-    filePtr = fopen(filename,"rb");
-    if (filePtr == NULL)
+    file_ptr = fopen(filename,"rb");
+    if (file_ptr == NULL)
         return NULL;
 
     //read the bitmap file header
-    fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER),1,filePtr);
+    fread(&bitmap_file_header, sizeof(BITMAPFILEHEADER),1,file_ptr);
 
     //verify that this is a bmp file by check bitmap id
-    if (bitmapFileHeader.bfType !=0x4D42)
+    if (bitmap_file_header.bf_type !=0x4D42)
     {
-        fclose(filePtr);
+        fclose(file_ptr);
         return NULL;
     }
 
     //read the bitmap info header
-    fread(bitmapInfoHeader, sizeof(BITMAPINFOHEADER),1,filePtr); // small edit. forgot to add the closing bracket at sizeof
+    fread(bitmap_info_header, sizeof(BITMAPINFOHEADER),1,file_ptr); // small edit. forgot to add the closing bracket at sizeof
 
     //move file point to the begging of bitmap data
-    fseek(filePtr, bitmapFileHeader.bOffBits, SEEK_SET);
+    fseek(file_ptr, bitmap_file_header.b_off_bits, SEEK_SET);
 
     //allocate enough memory for the bitmap image data
-    bitmapImage = (unsigned char*)malloc(bitmapInfoHeader->biSizeImage);
+    bitmap_image = (unsigned char*)malloc(bitmap_info_header->bi_size_image);
 
     //verify memory allocation
-    if (!bitmapImage)
+    if (!bitmap_image)
     {
-        free(bitmapImage);
-        fclose(filePtr);
+        free(bitmap_image);
+        fclose(file_ptr);
         return NULL;
     }
 
     //read in the bitmap image data
-    fread(bitmapImage,bitmapInfoHeader->biSizeImage, 1, filePtr);
+    fread(bitmap_image,bitmap_info_header->bi_size_image, 1, file_ptr);
 
     //make sure bitmap image data was read
-    if (bitmapImage == NULL)
+    if (bitmap_image == NULL)
     {
-        fclose(filePtr);
+        fclose(file_ptr);
         return NULL;
     }
 
     //swap the r and b values to get RGB (bitmap is BGR)
-    for (imageIdx = 0; imageIdx < bitmapInfoHeader->biSizeImage;imageIdx+=3)
+    for (image_idx = 0; image_idx < bitmap_info_header->bi_size_image;image_idx+=3)
     {
-        tempRGB = bitmapImage[imageIdx];
-        bitmapImage[imageIdx] = bitmapImage[imageIdx + 2];
-        bitmapImage[imageIdx + 2] = tempRGB;
+        temp_RGB = bitmap_image[image_idx];
+        bitmap_image[image_idx] = bitmap_image[image_idx + 2];
+        bitmap_image[image_idx + 2] = temp_RGB;
     }
 
     //close file and return bitmap iamge data
-    fclose(filePtr);
-    return bitmapImage;
+    fclose(file_ptr);
+    return bitmap_image;
 }

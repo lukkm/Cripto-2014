@@ -61,7 +61,7 @@ main(int argc, char **argv)
     
     BITMAPINFOHEADER bitmapInfoHeader;
     unsigned char *bitmapData;
-    bitmapData = LoadBitmapFile(in->filename[0], &bitmapInfoHeader);
+    bitmapData = load_bitmap_file(in->filename[0], &bitmapInfoHeader);
 
     return 0;
 }
