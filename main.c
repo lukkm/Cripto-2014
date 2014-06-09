@@ -60,8 +60,9 @@ main(int argc, char **argv)
     }
     
     BITMAPINFOHEADER bitmap_info_header;
+    BITMAPFILEHEADER bitmap_file_header;
     unsigned char * bitmap_data;
-    bitmap_data = load_bitmap_file(in->filename[0], &bitmap_info_header);
+    bitmap_data = load_bitmap_file(in->filename[0], &bitmap_file_header, &bitmap_info_header);
 
     print_matrix(bitmap_data, bitmap_info_header);
 
