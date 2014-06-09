@@ -58,9 +58,9 @@ main(int argc, char **argv)
         printf("Wrong parameter values\n");
         return 1;
     }
-    
+
     image_t * image = load_bitmap_file(in->filename[0]);
-    print_matrix(image);
+    write_bitmap_file(image);
 
     return 0;
 }
