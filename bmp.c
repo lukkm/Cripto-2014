@@ -52,14 +52,6 @@ load_bitmap_file(const char *filename, BITMAPINFOHEADER *bitmap_info_header) {
         return NULL;
     }
 
-    //swap the r and b values to get RGB (bitmap is BGR)
-    for (image_idx = 0; image_idx < bitmap_info_header->bi_size_image;image_idx+=3)
-    {
-        temp_RGB = bitmap_image[image_idx];
-        bitmap_image[image_idx] = bitmap_image[image_idx + 2];
-        bitmap_image[image_idx + 2] = temp_RGB;
-    }
-
     //close file and return bitmap iamge data
     fclose(file_ptr);
     return bitmap_image;
