@@ -31,3 +31,4 @@ typedef struct tag_BITMAPINFOHEADER
 #pragma pack(pop)
 
 unsigned char * load_bitmap_file(const char *filename, BITMAPINFOHEADER *bitmap_info_header);
+void print_matrix(unsigned char * bmpimage, BITMAPINFOHEADER info_header);

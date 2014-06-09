@@ -56,3 +56,14 @@ load_bitmap_file(const char *filename, BITMAPINFOHEADER *bitmap_info_header) {
     fclose(file_ptr);
     return bitmap_image;
 }
+
+void
+print_matrix(unsigned char * bmpimage, BITMAPINFOHEADER info_header) {
+    int i, j;
+    for (i = 0; i < info_header.bi_width; i++) {
+        for (j = 0; j < info_header.bi_height; j++) {
+            printf("%d ", bmpimage[i * info_header.bi_height + j]);
+        }
+        printf("\n");
+    }
+}
