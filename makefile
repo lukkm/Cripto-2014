@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-I -g
+CFLAGS=-I -g -largtable2
+SRC=src/main.c src/bmp.c
 
-shared_secret: main.c bmp.c
-	$(CC) -o shared_secret main.c bmp.c $(CFLAGS).
+shared_secret: $(SRC)
+	$(CC) -o shared_secret $(SRC) $(CFLAGS)
