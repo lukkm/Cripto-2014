@@ -22,4 +22,6 @@
 *.x86_64
 *.hex
 
+argtable2-13/*
+
 *.DS_Store
