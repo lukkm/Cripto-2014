@@ -34,7 +34,7 @@ main(int argc, char **argv)
     /* Validate flags */
     if (distribute->count > 0 && recover->count > 0) {
         printf("Cannot use distribute and recover in the same run\n");
-        errors++;    
+        errors++;
     }
 
     /* Validate k value */
@@ -47,7 +47,7 @@ main(int argc, char **argv)
     if (n->count > 0) {
         if (n->ival[0] < 3 || n->ival[0] > 8) {
             printf("n must be in the range [3, 8]\n");
-            errors++;    
+            errors++;
         }
     }
 
