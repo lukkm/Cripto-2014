@@ -60,8 +60,8 @@ main(int argc, char **argv)
     }
     
     image_t * image = load_bitmap_file(in->filename[0]);
-    print_matrix(image);
-
+    // print_matrix(image);
+    encript(image, dir->sval[0], k->ival[0]);
     return 0;
 }
 
