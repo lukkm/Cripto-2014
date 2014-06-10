@@ -29,6 +29,7 @@ typedef struct tag_BITMAPINFOHEADER {
 typedef struct tag_IMAGE {
     BITMAPFILEHEADER file_header;
     BITMAPINFOHEADER info_header;
+    unsigned char * second_header;
     unsigned char * bitmap;
 } image_t;
 

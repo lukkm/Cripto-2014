@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <argtable2.h>
 #include "bmp.h"
+#include "encript.h"
 #include "main.h"
 
 int
@@ -58,9 +59,12 @@ main(int argc, char **argv)
         printf("Wrong parameter values\n");
         return 1;
     }
-
-    image_t * image = load_bitmap_file(in->filename[0]);
-    write_bitmap_file(image);
+    
+    if (recover->count > 0) {
+        image_t * secret_image = recovery(dir->sval[0], k->ival[0]);
+        write_bitmap_file(secret_image);
+        //print_matrix(secret_image);
+    }
 
     return 0;
 }
