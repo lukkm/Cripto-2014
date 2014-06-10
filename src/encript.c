@@ -1,7 +1,10 @@
 #include <dirent.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include "bmp.h"
 #include "encript.h"
 
 image_t* encript(image_t* secret, const char* directory, int k) {
@@ -13,7 +16,7 @@ image_t* encript(image_t* secret, const char* directory, int k) {
 
 	if(p_dir) {
     while ((dir = readdir(p_dir)) != NULL) {
-   	 	if(strstr(dir->d_name, '.bmp') && image_count < 10) {
+   	 	if(strstr(dir->d_name, ".bmp") && image_count < 10) {
    	 		images[image_count] = load_bitmap_file(dir->d_name);
    	 		image_count++;
    	 	}
@@ -41,17 +44,17 @@ void hide_2(image_t** images, image_t* secret) {
     return;
   }
 
-  shadow_bytes = malloc(10 * sizeof char*);
+  shadow_bytes = malloc(10 * sizeof(char*));
   for(i = 0 ; i < 10 ; i++) {
-    shadow_bytes[i] = malloc(2 * sizeof char);
+    shadow_bytes[i] = malloc(2 * sizeof(char));
   }
 
   while(i < (secret->info_header.bi_width * secret->info_header.bi_width)) {
     secret_bytes[0] = secret->bitmap[i];
     secret_bytes[1] = secret->bitmap[i+1];
     while(images[j]) {
-      first_byte = images[j]->bitmap[i] >> 4;
-      second_byte = images[j]->bitmap[i+1] >> 4;
+      unsigned char first_byte = images[j]->bitmap[i] >> 4;
+      unsigned char second_byte = images[j]->bitmap[i+1] >> 4;
       while(!ld_for_shadow(first_byte, second_byte, shadow_bytes, j)) {
         randomize_byte_shadow(&first_byte);
       }
@@ -74,17 +77,17 @@ int ld_for_shadow(unsigned char first_byte, unsigned char second_byte, unsigned 
   int i;
   for(i = 0 ; i < shadows_block_amount ; i++) {
     if( (first_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % first_byte == 0) ) {
-      int first_multiplier = max(first_byte, shadow_bytes[i][0])/min(first_byte, shadow_bytes[i][0]);
+      int first_multiplier = MAX(first_byte, shadow_bytes[i][0])/MIN(first_byte, shadow_bytes[i][0]);
       if( (second_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % second_byte == 0) ) {
-        int second_multiplier = max(first_byte, shadow_bytes[i][1])/min(first_byte, shadow_bytes[i][1]);
+        int second_multiplier = MAX(first_byte, shadow_bytes[i][1])/MIN(first_byte, shadow_bytes[i][1]);
         if(first_multiplier == second_multiplier) {
           return 1;
         }
       }
     } else if ( (first_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % first_byte == 0) ) {
-      int first_multiplier = max(first_byte, shadow_bytes[i][1])/min(first_byte, shadow_bytes[i][1]);
+      int first_multiplier = MAX(first_byte, shadow_bytes[i][1])/MIN(first_byte, shadow_bytes[i][1]);
       if( (second_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % second_byte == 0) ) {
-        int second_multiplier = max(first_byte, shadow_bytes[i][0])/min(first_byte, shadow_bytes[i][0]);
+        int second_multiplier = MAX(first_byte, shadow_bytes[i][0])/MIN(first_byte, shadow_bytes[i][0]);
         if(first_multiplier == second_multiplier) {
           return 1;
         }

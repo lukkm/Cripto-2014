@@ -1,3 +1,6 @@
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 image_t* encript(image_t* secret, const char* directory, int k);
 void hide(image_t** images, image_t* secret, int k);
 void hide_2(image_t** images, image_t* secret);
