@@ -52,6 +52,9 @@ image_t * recovery(const char * directory, int k) {
             image_t * secret_image = (image_t *) malloc(sizeof(image_t));
             memcpy(&secret_image->file_header, &images[0]->file_header, sizeof(BITMAPFILEHEADER));
             memcpy(&secret_image->info_header, &images[0]->info_header, sizeof(BITMAPINFOHEADER));
+            int second_header_size = images[0]->file_header.b_off_bits - sizeof(BITMAPFILEHEADER) - sizeof(BITMAPINFOHEADER);
+            secret_image->second_header = malloc(second_header_size);
+            memcpy(secret_image->second_header, images[0]->second_header, second_header_size);
             secret_image->bitmap = (unsigned char *) malloc(secret_image->info_header.bi_width * secret_image->info_header.bi_height);
             int i;
             for (i = 0; i < secret_image->info_header.bi_width * secret_image->info_header.bi_height; i += k) {
@@ -92,18 +95,15 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
     
     // Take the first item of every equation to 1 to solve the equations.
     for (i = 0; i < image_count; i++) {
-        int first_mod_inverse = modular_inverse(coefficients[i][0]);
+        unsigned char first_mod_inverse = modular_inverse(coefficients[i][0]);
         for (j = 0; j < 3; j++) {
-            coefficients[i][j] = (coefficients[i][j] * first_mod_inverse) % 251;
+            coefficients[i][j] = ((int)coefficients[i][j] * first_mod_inverse) % 251;
         }
     }
-
     // Solve the system using the first two equations
     for (j = 0; j < 3; j++) {
-        coefficients[1][j] -= coefficients[0][j];
-        if (coefficients[1][j] < 0) {
-            coefficients[1][j] += 251;
-        }
+        int result = ((int)coefficients[1][j] - coefficients[0][j]);
+        coefficients[1][j] = (result < 0) ? result + 251 : result;
     }
 
     if (coefficients[1][0] != 0 || coefficients[1][1] == 0) {
@@ -112,9 +112,7 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
     }
 
     unsigned char y = (coefficients[1][2] * modular_inverse(coefficients[1][1])) % 251;
-    int x_result = coefficients[0][2] - ((coefficients[1][2] * y)) % 251;
-    x_result = (x_result < 0) ? x_result += 251 : x_result;
-    unsigned char x = (x_result * modular_inverse(coefficients[0][1])) % 251;
+    unsigned char x = (coefficients[0][2] - (coefficients[0][1] * y)) % 251;
 
     secret_image->bitmap[block_position] = x;
     secret_image->bitmap[block_position + 1] = y;
