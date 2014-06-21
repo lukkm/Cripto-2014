@@ -23,6 +23,8 @@ load_bitmap_file(const char *filename) {
 
     // Read the bitmap info header
     fread(&image->info_header, sizeof(BITMAPINFOHEADER), 1, file_ptr);
+    image->second_header = malloc(image->file_header.b_off_bits - sizeof(BITMAPFILEHEADER) - sizeof(BITMAPINFOHEADER));
+    fread(image->second_header, image->file_header.b_off_bits - sizeof(BITMAPFILEHEADER) - sizeof(BITMAPINFOHEADER), 1, file_ptr);
 
     // Move file point to the begging of bitmap data
     fseek(file_ptr, image->file_header.b_off_bits, SEEK_SET);
@@ -63,13 +65,15 @@ print_matrix(image_t * image) {
 }
 
 void
-write_bitmap_file(image_t * image) {
+write_bitmap_file(image_t * image, char* filename) {
 
-    FILE * out_f = fopen("recovered_image.bmp", "w+");
+    FILE * out_f = fopen(filename, "w+");
     // Write header
     fwrite(&image->file_header, sizeof(BITMAPFILEHEADER), 1, out_f);
     fwrite(&image->info_header, sizeof(BITMAPINFOHEADER), 1, out_f);
+    fwrite(image->second_header, image->file_header.b_off_bits - sizeof(BITMAPFILEHEADER) - sizeof(BITMAPINFOHEADER), 1, out_f);
     //Write image
+    fseek(out_f, image->file_header.b_off_bits, SEEK_SET);
     int n = fwrite(image->bitmap, image->info_header.bi_width * image->info_header.bi_height, 1, out_f);
     printf("%d\n", n);
 
