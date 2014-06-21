@@ -71,6 +71,7 @@ void hide_2(image_t** images, image_t* secret) {
     }
     i+=2;
   }
+  int jjaja = 2;
 }
 
 int ld_for_shadow(unsigned char first_byte, unsigned char second_byte, unsigned char** shadow_bytes, int shadows_block_amount) {
