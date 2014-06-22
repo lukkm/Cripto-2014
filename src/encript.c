@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "encript.h"
 
-void print_coefficients(unsigned char ** coefficients, int rows, int cols);
+void print_coefficients(unsigned char * coefficients[], int rows, int cols);
 
 image_t * encript(image_t secret, char* directory, int k) {
 	DIR* p_dir;
@@ -132,8 +132,6 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
         coefficients[i][3] = ((images[i]->bitmap[block_position] & 7) << 5) | ((images[i]->bitmap[block_position + 1] & 7) << 2) | (images[i]->bitmap[block_position + 2] & 3);
     }
     
-
-    
     // Take the first item of every equation to 1 to solve.
     for (i = 0; i < image_count; i++) {
         unsigned char first_mod_inverse = modular_inverse(coefficients[i][0]);
@@ -180,13 +178,19 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
 
     if (coefficients[1][0] != 0 || coefficients[2][0] != 0 || coefficients[2][1] != 0 || coefficients[1][1] == 0 || coefficients[2][2] == 0) {
         printf("Something went wrong with the equations!\n");
-        printf("%d %d %d\n%d %d %d\n", coefficients[1][0], coefficients[1][1], coefficients[1][2], coefficients[2][0], coefficients[2][1], coefficients[2][2]);
+        //printf("%d %d %d\n%d %d %d\n", coefficients[1][0], coefficients[1][1], coefficients[1][2], coefficients[2][0], coefficients[2][1], coefficients[2][2]);
     }
 
     // Use the first three equations to solve the system.
     unsigned char z = (coefficients[2][3] * modular_inverse(coefficients[2][2])) % 251;
-    unsigned char y = (coefficients[1][3] - (coefficients[1][2] * z)) % 251;
-    unsigned char x = (coefficients[0][3] - (coefficients[0][2] * z) - (coefficients[0][1] * y)) % 251;
+    int y = ((coefficients[1][3] - (coefficients[1][2] * z)) * modular_inverse(coefficients[1][1])) % 251;
+    while(y < 0) {
+      y += 251;
+    }
+    int x = ((coefficients[0][3] - (coefficients[0][2] * z)) - (coefficients[0][1] * y)) % 251;
+    while (x < 0) {
+      x += 251;
+    }
 
     secret_image->bitmap[block_position] = x;
     secret_image->bitmap[block_position + 1] = y;
