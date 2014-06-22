@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <argtable2.h>
+#include <string.h>
 #include "bmp.h"
 #include "encript.h"
 #include "main.h"
@@ -58,6 +59,28 @@ main(int argc, char **argv)
         arg_print_errors(stdout, end, argv[0]);
         printf("Wrong parameter values\n");
         return 1;
+    }
+
+    if(distribute->count > 0) {
+        image_t * image = load_bitmap_file(in->filename[0]);
+        // print_matrix(image);
+        int image_count;
+        image_t ** shadows;
+        shadows = malloc(10 * sizeof(image_t*));
+        image_count = encript(image, dir->sval[0], k->ival[0], shadows);
+        int i=0;
+        char * image_number = malloc(2);
+        while(i < image_count) {
+            *image_number = '0'+i;
+            *(image_number + 1) = 0;
+            char image_name[32];
+            strcpy(image_name, "shadow_");
+            strcat(image_name, image_number);
+            strcat(image_name, ".bmp");
+            write_bitmap_file(shadows[i], image_name);
+            i++;
+        }
+
     }
     
     if (recover->count > 0) {
