@@ -8,23 +8,24 @@
 
 void print_coefficients(unsigned char ** coefficients, int rows, int cols);
 
-image_t * encript(image_t* secret, const char* directory, int k) {
+image_t ** encript(image_t* secret, const char* directory, int k, int* image_count) {
 	DIR* p_dir;
 	struct dirent *dir;
 	p_dir = opendir(directory);
 	image_t * images[10];
-	int image_count = 0;
+	*image_count = 0;
 
 	if(p_dir) {
     while ((dir = readdir(p_dir)) != NULL) {
-   	 	if(strstr(dir->d_name, ".bmp") && image_count < 10) {
-   	 		images[image_count] = load_bitmap_file(dir->d_name);
-   	 		image_count++;
+   	 	if(strstr(dir->d_name, ".bmp") && *image_count < 10) {
+   	 		images[*image_count] = load_bitmap_file(dir->d_name);
+   	 		(*image_count)++;
    	 	}
     }
     closedir(p_dir);
   }
   hide(images, secret, k);
+  return images;
 }
 
 void hide(image_t** images, image_t* secret, int k) {
