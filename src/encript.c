@@ -65,13 +65,12 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
   for(i = 0 ; i < 10 ; i++) {
     shadow_bytes[i] = malloc(2 * sizeof(char));
   }
-  i = 0;
-  while(i < size) {
+  for(i = 0; i < size; i += 2) {
     secret_bytes[0] = secret->bitmap[i];
     secret_bytes[1] = secret->bitmap[i+1];
-    while(j < image_count) {
+    for(j = 0; j < image_count; j++) {
       unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
-      unsigned char second_byte = shadows[j]->bitmap[i+1] >> 4;
+      unsigned char second_byte = shadows[j]->bitmap[i+1] >> 5;
       while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
         randomize_byte_shadow(&first_byte);
       }
@@ -84,9 +83,7 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i] |= (secret_number >> 4);
       shadows[j]->bitmap[i+1] &= 0xF0;
       shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
-      j++;
     }
-    i += 2;
   }
 }
 
