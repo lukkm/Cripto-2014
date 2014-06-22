@@ -37,4 +37,4 @@ typedef struct tag_IMAGE {
 
 image_t * load_bitmap_file(const char *filename);
 void print_matrix(image_t * image);
-void write_bitmap_file(image_t * image);
+void write_bitmap_file(image_t * image, const char * filename);

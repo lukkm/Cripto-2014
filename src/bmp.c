@@ -65,9 +65,9 @@ print_matrix(image_t * image) {
 }
 
 void
-write_bitmap_file(image_t * image) {
+write_bitmap_file(image_t * image, const char * filename) {
 
-    FILE * out_f = fopen("recovered_image.bmp", "w+");
+    FILE * out_f = fopen(filename, "wb+");
     // Write header
     fwrite(&image->file_header, sizeof(BITMAPFILEHEADER), 1, out_f);
     fwrite(&image->info_header, sizeof(BITMAPINFOHEADER), 1, out_f);
