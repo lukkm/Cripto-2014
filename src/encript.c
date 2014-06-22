@@ -65,7 +65,7 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
   for(i = 0 ; i < 10 ; i++) {
     shadow_bytes[i] = malloc(2 * sizeof(char));
   }
-
+  i = 0;
   while(i < size) {
     secret_bytes[0] = secret->bitmap[i];
     secret_bytes[1] = secret->bitmap[i+1];

@@ -85,8 +85,7 @@ main(int argc, char **argv)
     
     if (recover->count > 0) {
         image_t * secret_image = recovery(dir->sval[0], k->ival[0]);
-        write_bitmap_file(secret_image, "asd.bmp");
-        //print_matrix(secret_image);
+        write_bitmap_file(secret_image, in->filename[0]);
     }
 
     return 0;
