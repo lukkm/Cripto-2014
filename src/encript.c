@@ -50,12 +50,13 @@ void hide(image_t** images, image_t* secret, int k, int image_count) {
   }
 }
 
-void hide_2(image_t** images, image_t* secret, int image_count) {
+void hide_2(image_t** shadows, image_t* secret, int image_count) {
   unsigned char secret_bytes[2];
   unsigned char** shadow_bytes;
   int i=0, j=0;
+  int size = secret->info_header.bi_width * secret->info_header.bi_height;
 
-  if(secret->info_header.bi_size % 2!=0) {
+  if(size % 2 != 0) {
     printf("lcdtm olboiz");
     return;
   }
@@ -65,31 +66,31 @@ void hide_2(image_t** images, image_t* secret, int image_count) {
     shadow_bytes[i] = malloc(2 * sizeof(char));
   }
 
-  while(i < (secret->info_header.bi_width * secret->info_header.bi_height)) {
+  while(i < size) {
     secret_bytes[0] = secret->bitmap[i];
     secret_bytes[1] = secret->bitmap[i+1];
     while(j < image_count) {
-      unsigned char first_byte = images[j]->bitmap[i] >> 4;
-      unsigned char second_byte = images[j]->bitmap[i+1] >> 4;
-      //while(!ld_for_shadow(first_byte, second_byte, shadow_bytes, j)) {
-      //  randomize_byte_shadow(&first_byte);
-      //}
-      shadow_bytes[j][0] = images[j]->bitmap[i] >> 4;
-      shadow_bytes[j][1] = images[j]->bitmap[i+1] >> 4;
+      unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
+      unsigned char second_byte = shadows[j]->bitmap[i+1] >> 4;
+      while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
+        randomize_byte_shadow(&first_byte);
+      }
+      shadow_bytes[j][0] = first_byte;
+      shadow_bytes[j][1] = second_byte;
 
-      int secret_number = shadow_bytes[j][0] * secret_bytes[0] + shadow_bytes[j][1] * secret_bytes[1];
+      int secret_number = first_byte * secret_bytes[0] + second_byte * secret_bytes[1];
       secret_number = secret_number % 251;
-      images[j]->bitmap[i] &= 0xF0;
-      images[j]->bitmap[i] |= (secret_number >> 4);
-      images[j]->bitmap[i+1] &= 0xF0;
-      images[j]->bitmap[i+1] |= (secret_number & 0X0F);
+      shadows[j]->bitmap[i] &= 0xF0;
+      shadows[j]->bitmap[i] |= (secret_number >> 4);
+      shadows[j]->bitmap[i+1] &= 0xF0;
+      shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
       j++;
     }
-    i+=2;
+    i += 2;
   }
 }
 
-int ld_for_shadow(unsigned char first_byte, unsigned char second_byte, unsigned char** shadow_bytes, int shadows_block_amount) {
+int shadow_is_ld(unsigned char first_byte, unsigned char second_byte, unsigned char** shadow_bytes, int shadows_block_amount) {
   int i;
   for(i = 0 ; i < shadows_block_amount ; i++) {
     if( (first_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % first_byte == 0) ) {
@@ -100,81 +101,19 @@ int ld_for_shadow(unsigned char first_byte, unsigned char second_byte, unsigned 
           return 1;
         }
       }
-    } else if ( (first_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % first_byte == 0) ) {
-      int first_multiplier = MAX(first_byte, shadow_bytes[i][1])/MIN(first_byte, shadow_bytes[i][1]);
-      if( (second_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % second_byte == 0) ) {
-        int second_multiplier = MAX(first_byte, shadow_bytes[i][0])/MIN(first_byte, shadow_bytes[i][0]);
-        if(first_multiplier == second_multiplier) {
-          return 1;
-        }
-      }
     }
   }
   return 0;
 }
 
 void randomize_byte_shadow(unsigned char* b) {
-  srand(time(NULL));
-  int r = (rand() % 8) + 1;
-
-  switch (r) {
-    case 8:
-      if(*b >> 7 % 2 == 1) {
-        *b = *b & 0x7F;
-      } else {
-        *b = *b | 0x80;
-      }
-      break;
-    case 7:
-      if(*b >> 6 % 2 == 1) {
-        *b = *b & 0xBF;
-      } else {
-        *b = *b | 0x40;
-      }
-      break;
-    case 6:
-      if(*b >> 5 % 2 == 1) {
-        *b = *b & 0xDF;
-      } else {
-        *b = *b | 0x20;
-      }
-      break;
-    case 5:
-      if(*b >> 4 % 2 == 1) {
-        *b = *b & 0xEF;
-      } else {
-        *b = *b | 0x10;
-      }
-      break;
-    case 4:
-      if(*b >> 3 % 2 == 1) {
-        *b = *b & 0xF7;
-      } else {
-        *b = *b | 0x08;
-      }
-      break;
-    case 3:
-      if(*b >> 2 % 2 == 1) {
-        *b = *b & 0xFB;
-      } else {
-        *b = *b | 0x04;
-      }
-      break;
-    case 2:
-      if(*b >> 1 % 2 == 1) {
-        *b = *b & 0xFD;
-      } else {
-        *b = *b | 0x02;
-      }
-      break;
-    case 1:
-      if(*b % 2 == 1) {
-        *b = *b & 0xFE;
-      } else {
-        *b = *b | 0x01;
-      }
-      break;
+  
+  if (*b != 0) {
+    *b -= 1;
+  } else {
+    *b += 1;
   }
+  
 }
 
 // image_t** hide_3(image_t** images, image_t* secret) {

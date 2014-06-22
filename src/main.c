@@ -76,9 +76,11 @@ main(int argc, char **argv)
             char image_name[32];
             strcpy(image_name, "shadow_");
             strcat(image_name, image_number);
+            strcat(image_name, ".bmp");
             write_bitmap_file(shadows[i], image_name);
             i++;
         }
+
     }
     
     if (recover->count > 0) {
