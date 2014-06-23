@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <openssl/evp.h>
 #include "bmp.h"
 #include "utils.h"
 #include "decript.h"
@@ -66,12 +67,14 @@ recover_block(image_t * secret_image, image_t ** images, int k, int block_positi
 void
 recover_block2(image_t * secret_image, image_t ** images, int block_position, int image_count) {
     unsigned char coefficients[image_count][3]; 
+    unsigned char parity_bit[image_count];
     int i, j;
     for (i = 0; i < image_count; i++) {
         coefficients[i][0] = images[i]->bitmap[block_position] >> 4;
         // Shift 5 times to take parity bit out
         coefficients[i][1] = images[i]->bitmap[block_position + 1] >> 5;
-        coefficients[i][2] = ((images[i]->bitmap[block_position] & 15) << 4) | (images[i]->bitmap[block_position + 1] & 15);
+        parity_bit[i] = (images[i]->bitmap[block_position + 1] >> 4) & 0x01;
+        coefficients[i][2] = ((images[i]->bitmap[block_position] & 0x0F) << 4) | (images[i]->bitmap[block_position + 1] & 0x0F);
     }
     
     // Take the first item of every equation to 1 to solve.
@@ -92,6 +95,35 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
         printf("Something went wrong with the equations!\n");
     }
 
+    // Check the parity bit for errors.
+    for (i = 0; i < image_count; i++) {
+        EVP_MD_CTX mdctx;
+        const EVP_MD *md;
+        unsigned char output[EVP_MAX_MD_SIZE];
+        int output_len;
+        
+        char * parity_check = calloc((sizeof(unsigned char) * 2) + 1, 1);
+        strcpy(parity_check, byte_to_binary(images[i]->bitmap[block_position]));
+        strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1]), 3);
+        strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1] << 4), 4);
+        strcat(parity_check, "0");
+        
+        OpenSSL_add_all_digests();
+        md = EVP_get_digestbyname("MD5");
+        EVP_MD_CTX_init(&mdctx);
+        EVP_DigestInit_ex(&mdctx, md, NULL);
+        EVP_DigestUpdate(&mdctx, parity_check, strlen(parity_check));
+        EVP_DigestFinal_ex(&mdctx, output, &output_len);
+        EVP_MD_CTX_cleanup(&mdctx);
+
+        if (strlen(output) == 16) {
+            unsigned char parity = md5_xor(output);
+            if (parity != parity_bit[i]) {
+                printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
+            }    
+        }
+    }
+
     unsigned char y = (coefficients[1][2] * modular_inverse(coefficients[1][1])) % 251;
     unsigned char x = (coefficients[0][2] - (coefficients[0][1] * y)) % 251;
 
@@ -101,18 +133,18 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
 
 void
 recover_block3(image_t * secret_image, image_t ** images, int block_position, int image_count) {
-    unsigned char coefficients[image_count][4]; 
+    unsigned char coefficients[image_count][4];
+    unsigned char parity_bit[image_count];
     int i, j;
     for (i = 0; i < image_count; i++) {
         coefficients[i][0] = images[i]->bitmap[block_position] >> 3;
         coefficients[i][1] = images[i]->bitmap[block_position + 1] >> 3;
         // Shift 6 times to take parity bit out
+        parity_bit[i] = (images[i]->bitmap[block_position + 2] >> 2) & 0x01;
         coefficients[i][2] = images[i]->bitmap[block_position + 2] >> 3;
         coefficients[i][3] = ((images[i]->bitmap[block_position] & 7) << 5) | ((images[i]->bitmap[block_position + 1] & 7) << 2) | (images[i]->bitmap[block_position + 2] & 3);
     }
-    
-
-    
+        
     // Take the first item of every equation to 1 to solve.
     for (i = 0; i < image_count; i++) {
         unsigned char first_mod_inverse = modular_inverse(coefficients[i][0]);
@@ -159,7 +191,36 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
 
     if (coefficients[1][0] != 0 || coefficients[2][0] != 0 || coefficients[2][1] != 0 || coefficients[1][1] == 0 || coefficients[2][2] == 0) {
         printf("Something went wrong with the equations!\n");
-        printf("%d %d %d\n%d %d %d\n", coefficients[1][0], coefficients[1][1], coefficients[1][2], coefficients[2][0], coefficients[2][1], coefficients[2][2]);
+    }
+
+    // Check the parity bit for errors.
+    for (i = 0; i < image_count; i++) {
+        EVP_MD_CTX mdctx;
+        const EVP_MD *md;
+        unsigned char output[EVP_MAX_MD_SIZE];
+        int output_len;
+        
+        char * parity_check = calloc((sizeof(unsigned char) * 3) + 1, 1);
+        strcpy(parity_check, byte_to_binary(images[i]->bitmap[block_position]));
+        strcat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1]));
+        strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 2]), 5);
+        strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 2] << 6), 2);
+        strcat(parity_check, "0");
+        
+        OpenSSL_add_all_digests();
+        md = EVP_get_digestbyname("MD5");
+        EVP_MD_CTX_init(&mdctx);
+        EVP_DigestInit_ex(&mdctx, md, NULL);
+        EVP_DigestUpdate(&mdctx, parity_check, strlen(parity_check));
+        EVP_DigestFinal_ex(&mdctx, output, &output_len);
+        EVP_MD_CTX_cleanup(&mdctx);
+
+        if (strlen(output) == 16) {
+            unsigned char parity = md5_xor(output);
+            if (parity != parity_bit[i]) {
+                printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
+            }    
+        }
     }
 
     // Use the first three equations to solve the system.

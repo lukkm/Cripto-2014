@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/evp.h>
 #include <time.h>
 #include "bmp.h"
 #include "utils.h"
@@ -63,9 +64,9 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
     for(j = 0; j < image_count; j++) {
       unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 5;
-      while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
-        randomize_byte_shadow(&first_byte);
-      }
+      //while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
+      //  randomize_byte_shadow(&first_byte);
+      //}
       shadow_bytes[j][0] = first_byte;
       shadow_bytes[j][1] = second_byte;
 
@@ -75,8 +76,34 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i] |= (secret_number >> 4);
       shadows[j]->bitmap[i+1] &= 0xF0;
       shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
-    } 
-  } 
+
+      EVP_MD_CTX mdctx;
+      const EVP_MD *md;
+      unsigned char output[EVP_MAX_MD_SIZE];
+      int output_len;
+      
+      char * parity_check = calloc((sizeof(unsigned char) * 2) + 1, 1);
+      strcpy(parity_check, byte_to_binary(shadows[j]->bitmap[i]));
+      strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1]), 3);
+      strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1] << 4), 4);
+      strcat(parity_check, "0");
+      
+      OpenSSL_add_all_digests();
+      md = EVP_get_digestbyname("MD5");
+      EVP_MD_CTX_init(&mdctx);
+      EVP_DigestInit_ex(&mdctx, md, NULL);
+      EVP_DigestUpdate(&mdctx, parity_check, strlen(parity_check));
+      EVP_DigestFinal_ex(&mdctx, output, &output_len);
+      EVP_MD_CTX_cleanup(&mdctx);
+
+      unsigned char parity = md5_xor(output);
+      if (parity) {
+        shadows[j]->bitmap[i+1] |= 0X10;
+      } else {
+        shadows[j]->bitmap[i+1] &= 0XEF;
+      }
+    }
+  }
 }
 
 int shadow_is_ld(unsigned char first_byte, unsigned char second_byte, unsigned char** shadow_bytes, int shadows_block_amount) {

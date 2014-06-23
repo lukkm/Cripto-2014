@@ -4,6 +4,7 @@
 #include <string.h>
 #include "bmp.h"
 #include "encript.h"
+#include "decript.h"
 #include "main.h"
 
 int
