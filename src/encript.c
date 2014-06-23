@@ -156,10 +156,6 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 3;
       unsigned char third_byte = shadows[j]->bitmap[i+2] >> 3;
 
-      // while(shadow_is_ld_k3(first_byte, second_byte, shadow_bytes, j)) {
-      //   randomize_byte_shadow(&first_byte);
-      // }
-
       shadow_bytes[j][0] = first_byte;
       shadow_bytes[j][1] = second_byte;
       shadow_bytes[j][2] = third_byte;
