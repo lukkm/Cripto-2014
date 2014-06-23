@@ -62,32 +62,57 @@ main(int argc, char **argv)
         return 1;
     }
 
+    char * directory;
+    if (dir->count > 0) {
+        directory = dir->sval[0];
+    } else {
+        directory = ".";
+    }
+
+    int shadow_amount;
+    if (n->count > 0) {
+        if (n->ival[0] <= 10) {
+            shadow_amount = n->ival[0];
+        }
+    } else {
+        shadow_amount = 10;
+    }
+
     if(distribute->count > 0) {
         image_t * image = load_bitmap_file(in->filename[0]);
+        if (image == NULL) {
+            printf("Image to distribute does not exist\n");
+            exit(EXIT_FAILURE);
+        }
         // print_matrix(image);
         int image_count;
         image_t ** shadows;
-        shadows = malloc(10 * sizeof(image_t*));
-        image_count = encript(image, dir->sval[0], k->ival[0], shadows);
+        shadows = malloc(shadow_amount * sizeof(image_t*));
+        image_count = encript(image, directory, k->ival[0], shadows, shadow_amount);
         int i=0;
         char * image_number = malloc(2);
         while(i < image_count) {
             *image_number = '0'+i;
             *(image_number + 1) = 0;
-            char image_name[32];
-            strcpy(image_name, "shadow_");
+            char * image_name = calloc(1024, 1);
+            if (dir->count > 0) {
+                strcpy(image_name, directory);
+                strcat(image_name, "/");
+            }
+            strcat(image_name, "shadow_");
             strcat(image_name, image_number);
             strcat(image_name, ".bmp");
             write_bitmap_file(shadows[i], image_name);
+            free(image_name);
             i++;
         }
 
     }
     
     if (recover->count > 0) {
-        image_t * secret_image = recovery(dir->sval[0], k->ival[0]);
+        image_t * secret_image = recovery(directory, k->ival[0]);
         write_bitmap_file(secret_image, in->filename[0]);
     }
 
-    return 0;
+    exit(EXIT_SUCCESS);
 }

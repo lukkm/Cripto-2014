@@ -9,7 +9,7 @@
 
 void print_coefficients(unsigned char * coefficients[], int rows, int cols);
 
-int encript(image_t* secret, const char* directory, int k, image_t** shadows) {
+int encript(image_t* secret, const char* directory, int k, image_t** shadows, int shadow_amount) {
 	DIR* p_dir;
 	struct dirent *dir;
 	p_dir = opendir(directory);
@@ -18,13 +18,17 @@ int encript(image_t* secret, const char* directory, int k, image_t** shadows) {
 
 	if(p_dir) {
     while ((dir = readdir(p_dir)) != NULL) {
-   	 	if(strstr(dir->d_name, ".bmp") && image_count < 10) {
+   	 	if(strstr(dir->d_name, ".bmp") && image_count < shadow_amount) {
    	 		full_path = calloc(strlen(directory) + strlen(dir->d_name) + 2, 1);
         strcpy(full_path, directory);
         strcat(full_path, "/");
         strcat(full_path, dir->d_name);
         shadows[image_count] = load_bitmap_file(full_path);
-   	 		image_count++;
+   	 		if (shadows[image_count] == NULL) {
+          printf("Incorrect image format for image %s\n", full_path);
+          exit(EXIT_FAILURE);
+        }
+        image_count++;
    	 	}
     }
     closedir(p_dir);
@@ -50,11 +54,11 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
 
   if(size % 2 != 0) {
     // TODO: Show error
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
-  shadow_bytes = malloc(10 * sizeof(char*));
-  for(i = 0 ; i < 10 ; i++) {
+  shadow_bytes = malloc(image_count * sizeof(char*));
+  for(i = 0 ; i < image_count ; i++) {
     shadow_bytes[i] = malloc(2 * sizeof(char));
   }
   for(i = 0; i < size; i += 2) {
@@ -63,9 +67,9 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
     for(j = 0; j < image_count; j++) {
       unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 5;
-      while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
-        randomize_byte_shadow(&first_byte);
-      }
+      //while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
+      //  randomize_byte_shadow(&first_byte);
+      //}
       shadow_bytes[j][0] = first_byte;
       shadow_bytes[j][1] = second_byte;
 
@@ -128,7 +132,7 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
 
   if(size % 3 != 0) {
     // TODO: Show error
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   shadow_bytes = malloc(10 * sizeof(char*));
