@@ -90,10 +90,6 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
         coefficients[1][j] = (result < 0) ? result + 251 : result;
     }
 
-    if (coefficients[1][0] != 0 || coefficients[1][1] == 0) {
-        printf("Something went wrong with the equations!\n");
-    }
-
     // Check the parity bit for errors.
     for (i = 0; i < image_count; i++) {
         char output[1024];
@@ -173,10 +169,6 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
                 }
             }
         }
-    }
-
-    if (coefficients[1][0] != 0 || coefficients[2][0] != 0 || coefficients[2][1] != 0 || coefficients[1][1] == 0 || coefficients[2][2] == 0) {
-        printf("Something went wrong with the equations!\n");
     }
 
     // Check the parity bit for errors.
