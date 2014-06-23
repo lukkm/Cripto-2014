@@ -59,7 +59,7 @@ main(int argc, char **argv)
     if (errors > 0) {
         arg_print_errors(stdout, end, argv[0]);
         printf("Wrong parameter values\n");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     char * directory;
@@ -71,11 +71,9 @@ main(int argc, char **argv)
 
     int shadow_amount;
     if (n->count > 0) {
-        if (n->ival[0] <= 10) {
-            shadow_amount = n->ival[0];
-        }
+        shadow_amount = n->ival[0];
     } else {
-        shadow_amount = 10;
+        shadow_amount = 8;
     }
 
     if(distribute->count > 0) {
