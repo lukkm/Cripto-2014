@@ -106,7 +106,7 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
         int output_length = digest_MD5_util(parity_check, output);
         unsigned char parity = md5_xor(output, output_length);
         if (parity != parity_bit[i]) {
-            printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
+            //printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
         }    
 
         free(output);
@@ -194,7 +194,7 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
         int output_length = digest_MD5_util(parity_check, output);
         unsigned char parity = md5_xor(output, output_length);
         if (parity != parity_bit[i]) {
-            printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
+            //printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
         }    
 
         free(output);

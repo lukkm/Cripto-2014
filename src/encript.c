@@ -63,9 +63,9 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
     for(j = 0; j < image_count; j++) {
       unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 5;
-      //while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
-      //  randomize_byte_shadow(&first_byte);
-      //}
+      while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
+        randomize_byte_shadow(&first_byte);
+      }
       shadow_bytes[j][0] = first_byte;
       shadow_bytes[j][1] = second_byte;
 
