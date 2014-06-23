@@ -2,7 +2,6 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/evp.h>
 #include <time.h>
 #include "bmp.h"
 #include "utils.h"
@@ -50,8 +49,8 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
   int size = secret->info_header.bi_width * secret->info_header.bi_height;
 
   if(size % 2 != 0) {
-    printf("lcdtm olboiz");
-    return;
+    // TODO: Show error
+    exit(1);
   }
 
   shadow_bytes = malloc(10 * sizeof(char*));
@@ -77,31 +76,22 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i+1] &= 0xF0;
       shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
 
-      EVP_MD_CTX mdctx;
-      const EVP_MD *md;
-      unsigned char output[EVP_MAX_MD_SIZE];
-      int output_len;
-      
       char * parity_check = calloc((sizeof(unsigned char) * 2) + 1, 1);
       strcpy(parity_check, byte_to_binary(shadows[j]->bitmap[i]));
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1]), 3);
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1] << 4), 4);
       strcat(parity_check, "0");
       
-      OpenSSL_add_all_digests();
-      md = EVP_get_digestbyname("MD5");
-      EVP_MD_CTX_init(&mdctx);
-      EVP_DigestInit_ex(&mdctx, md, NULL);
-      EVP_DigestUpdate(&mdctx, parity_check, strlen(parity_check));
-      EVP_DigestFinal_ex(&mdctx, output, &output_len);
-      EVP_MD_CTX_cleanup(&mdctx);
-
-      unsigned char parity = md5_xor(output);
+      char * output = calloc(1024, 1);
+      int output_length = digest_MD5_util(parity_check, output);
+      unsigned char parity = md5_xor(output, output_length);
       if (parity) {
         shadows[j]->bitmap[i+1] |= 0X10;
       } else {
         shadows[j]->bitmap[i+1] &= 0XEF;
       }
+
+      free(output);
     }
   }
 }
@@ -115,7 +105,6 @@ int shadow_is_ld(unsigned char first_byte, unsigned char second_byte, unsigned c
     unsigned char s_1_after = ((shadow_bytes[i][1]) * s_0_inv) % 251;
 
     if (s_1_after == sec_after) {
-      printf("es ld\n");
       return 1;
     }
   }
@@ -138,8 +127,8 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
   int size = secret->info_header.bi_width * secret->info_header.bi_height;
 
   if(size % 3 != 0) {
-    printf("lcdtm olboiz");
-    return;
+    // TODO: Show error
+    exit(1);
   }
 
   shadow_bytes = malloc(10 * sizeof(char*));
@@ -173,6 +162,22 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i+2] &= 0xF8; 
       // falta agregarle el bit de paridad!
       shadows[j]->bitmap[i+2] |= (secret_number & 0X03); 
+
+      char * parity_check = calloc((sizeof(unsigned char) * 3) + 1, 1);
+      strcpy(parity_check, byte_to_binary(shadows[j]->bitmap[i]));
+      strcat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1]));
+      strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 2]), 5);
+      strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 2] << 6), 2);
+      strcat(parity_check, "0");
+      
+      char * output = calloc(1024, 1);
+      int output_length = digest_MD5_util(parity_check, output);
+      unsigned char parity = md5_xor(output, output_length);
+      if (parity) {
+        shadows[j]->bitmap[i+2] |= 0X04;
+      } else {
+        shadows[j]->bitmap[i+2] &= 0XFB;
+      }
     } 
   } 
 }
