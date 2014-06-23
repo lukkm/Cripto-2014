@@ -64,7 +64,9 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
   for(i = 0; i < size; i += 2) {
     secret_bytes[0] = secret->bitmap[i];
     secret_bytes[1] = secret->bitmap[i+1];
+
     for(j = 0; j < image_count; j++) {
+      char output[1024];
       unsigned char first_byte = shadows[j]->bitmap[i] >> 4;
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 5;
       //while(shadow_is_ld(first_byte, second_byte, shadow_bytes, j)) {
@@ -80,13 +82,12 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i+1] &= 0xF0;
       shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
 
-      char * parity_check = calloc((sizeof(unsigned char) * 2) + 1, 1);
+      char parity_check[17];
       strcpy(parity_check, byte_to_binary(shadows[j]->bitmap[i]));
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1]), 3);
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1] << 4), 4);
       strcat(parity_check, "0");
       
-      char * output = calloc(1024, 1);
       int output_length = digest_MD5_util(parity_check, output);
       unsigned char parity = md5_xor(output, output_length);
       if (parity) {
@@ -94,8 +95,6 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       } else {
         shadows[j]->bitmap[i+1] &= 0XEF;
       }
-
-      free(output);
     }
   }
 }
@@ -145,6 +144,7 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
     secret_bytes[2] = secret->bitmap[i+2];
 
     for(j = 0; j < image_count; j++) {
+      char output[1024];
       unsigned char first_byte = shadows[j]->bitmap[i] >> 3;
       unsigned char second_byte = shadows[j]->bitmap[i+1] >> 3;
       unsigned char third_byte = shadows[j]->bitmap[i+2] >> 3;
@@ -166,14 +166,13 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i+2] &= 0xF8; 
       shadows[j]->bitmap[i+2] |= (secret_number & 0X03); 
 
-      char * parity_check = calloc((sizeof(unsigned char) * 3) + 1, 1);
+      char parity_check[25];
       strcpy(parity_check, byte_to_binary(shadows[j]->bitmap[i]));
       strcat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 1]));
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 2]), 5);
       strncat(parity_check, byte_to_binary(shadows[j]->bitmap[i + 2] << 6), 2);
       strcat(parity_check, "0");
       
-      char * output = calloc(1024, 1);
       int output_length = digest_MD5_util(parity_check, output);
       unsigned char parity = md5_xor(output, output_length);
       if (parity) {

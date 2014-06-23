@@ -19,12 +19,12 @@ image_t * recovery(const char * directory, int k) {
     while ((dir = readdir(p_dir)) != NULL) {
    	 	if(strstr(dir->d_name, ".bmp") && image_count < 10) {
    	 		full_path = calloc(strlen(directory) + strlen(dir->d_name) + 2, 1);
-        strcpy(full_path, directory);
-        strcat(full_path, "/");
-        strcat(full_path, dir->d_name);
-        images[image_count] = load_bitmap_file(full_path);
+            strcpy(full_path, directory);
+            strcat(full_path, "/");
+            strcat(full_path, dir->d_name);
+            images[image_count] = load_bitmap_file(full_path);
    	 		image_count++;
-        free(full_path);
+            free(full_path);
    	 	}
     }
     closedir(p_dir);
@@ -96,20 +96,18 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
 
     // Check the parity bit for errors.
     for (i = 0; i < image_count; i++) {
-        char * parity_check = calloc((sizeof(unsigned char) * 2) + 1, 1);
+        char output[1024];
+        char parity_check[17];
         strcpy(parity_check, byte_to_binary(images[i]->bitmap[block_position]));
         strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1]), 3);
         strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1] << 4), 4);
         strcat(parity_check, "0");
         
-        char * output = calloc(1024, 1);
         int output_length = digest_MD5_util(parity_check, output);
         unsigned char parity = md5_xor(output, output_length);
         if (parity != parity_bit[i]) {
             //printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
         }    
-
-        free(output);
     }
 
     unsigned char y = (coefficients[1][2] * modular_inverse(coefficients[1][1])) % 251;
@@ -183,27 +181,31 @@ recover_block3(image_t * secret_image, image_t ** images, int block_position, in
 
     // Check the parity bit for errors.
     for (i = 0; i < image_count; i++) {
-        char * parity_check = calloc((sizeof(unsigned char) * 3) + 1, 1);
+        char output[1024];
+        char parity_check[25];
         strcpy(parity_check, byte_to_binary(images[i]->bitmap[block_position]));
         strcat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 1]));
         strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 2]), 5);
         strncat(parity_check, byte_to_binary(images[i]->bitmap[block_position + 2] << 6), 2);
         strcat(parity_check, "0");
         
-        char * output = calloc(1024, 1);
         int output_length = digest_MD5_util(parity_check, output);
         unsigned char parity = md5_xor(output, output_length);
         if (parity != parity_bit[i]) {
             //printf("Parity bit incorrect value at block %d, hash was %d, parity_bit %d\n", block_position, parity, parity_bit[i]);
         }    
-
-        free(output);
     }
 
     // Use the first three equations to solve the system.
     unsigned char z = (coefficients[2][3] * modular_inverse(coefficients[2][2])) % 251;
-    unsigned char y = (coefficients[1][3] - (coefficients[1][2] * z)) % 251;
-    unsigned char x = (coefficients[0][3] - (coefficients[0][2] * z) - (coefficients[0][1] * y)) % 251;
+    int y = ((coefficients[1][3] - (coefficients[1][2] * z)) * modular_inverse(coefficients[1][1])) % 251;
+    while (y < 0) {
+        y += 251;
+    }
+    int x = (coefficients[0][3] - (coefficients[0][2] * z) - (coefficients[0][1] * y)) % 251;
+    while (x < 0) {
+        x += 251;
+    }
 
     secret_image->bitmap[block_position] = x;
     secret_image->bitmap[block_position + 1] = y;

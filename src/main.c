@@ -62,7 +62,7 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    char * directory;
+    const char * directory;
     if (dir->count > 0) {
         directory = dir->sval[0];
     } else {
