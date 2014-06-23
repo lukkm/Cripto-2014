@@ -46,7 +46,7 @@ void hide(image_t** images, image_t* secret, int k, int image_count) {
   if(k == 2) {
     hide_2(images, secret, image_count);
   } else if (k == 3) {
-    // hide_3(images, secret);
+    hide_3(images, secret, image_count);
   }
 }
 
@@ -83,57 +83,80 @@ void hide_2(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i] |= (secret_number >> 4);
       shadows[j]->bitmap[i+1] &= 0xF0;
       shadows[j]->bitmap[i+1] |= (secret_number & 0X0F);
-    }
-  }
+    } 
+  } 
 }
 
 int shadow_is_ld(unsigned char first_byte, unsigned char second_byte, unsigned char** shadow_bytes, int shadows_block_amount) {
   int i;
+  unsigned char first_inv = modular_inverse(first_byte);
+  unsigned char sec_after = (second_byte*first_inv) % 251;
   for(i = 0 ; i < shadows_block_amount ; i++) {
-    if( (first_byte % shadow_bytes[i][0] == 0) || (shadow_bytes[i][0] % first_byte == 0) ) {
-      int first_multiplier = MAX(first_byte, shadow_bytes[i][0])/MIN(first_byte, shadow_bytes[i][0]);
-      if( (second_byte % shadow_bytes[i][1] == 0) || (shadow_bytes[i][1] % second_byte == 0) ) {
-        int second_multiplier = MAX(first_byte, shadow_bytes[i][1])/MIN(first_byte, shadow_bytes[i][1]);
-        if(first_multiplier == second_multiplier) {
-          return 1;
-        }
-      }
+    unsigned char s_0_inv = modular_inverse(shadow_bytes[i][0]);
+    unsigned char s_1_after = ((shadow_bytes[i][1]) * s_0_inv) % 251;
+
+    if (s_1_after == sec_after) {
+      printf("es ld\n");
+      return 1;
     }
   }
   return 0;
 }
 
+// ya viene el byte shifteado 4 >>
 void randomize_byte_shadow(unsigned char* b) {
-  
-  if (*b != 0) {
-    *b -= 1;
-  } else {
-    *b += 1;
-  }
-  
+  srand(time(NULL));
+  int r = (rand() % 3) + 1;
+
+  int aux_bit = 1 << r;
+  *b ^= aux_bit;
 }
 
-// image_t** hide_3(image_t** images, image_t* secret) {
-//   unsigned char bytes[3];
-//   int i=0, j=0;
-//   while(i < secret->info_header.bi_size - (info_header.bi_size % 3)) {
-//     bytes[0] = secret->bitmap[i];
-//     bytes[1] = secret->bitmap[i+1];
-//     bytes[2] = secret->bitmap[i+2];
-//     while(images[j]) {
-//       int first = images[j]->bitmap[i];
-//       int second = images[j]->bitmap[i+1];
-//       int secret_number = first >> 4 * bytes[0] + second >> 4 * bytes[1];
-//       secret_number = secret_number % 251;
-//       images[j]->bitmap[i] &= 0xF0;
-//       images[j]->bitmap[i] |= secret_number >> 4;
-//       images[j]->bitmap[i+1] &= 0xF0;
-//       images[j]->bitmap[i+1] |= secret_number & 0X0F;
-//       j++;
-//     }
-//     i+=2;
-//   }  
-// }
+void hide_3(image_t** shadows, image_t* secret, int image_count) {
+  unsigned char secret_bytes[3];
+  unsigned char** shadow_bytes;
+  int i=0, j=0;
+  int size = secret->info_header.bi_width * secret->info_header.bi_height;
+
+  if(size % 3 != 0) {
+    printf("lcdtm olboiz");
+    return;
+  }
+
+  shadow_bytes = malloc(10 * sizeof(char*));
+  for(i = 0 ; i < 10 ; i++) {
+    shadow_bytes[i] = malloc(3 * sizeof(char));
+  }
+  for(i = 0; i < size; i += 3) {
+    secret_bytes[0] = secret->bitmap[i];
+    secret_bytes[1] = secret->bitmap[i+1];
+    secret_bytes[2] = secret->bitmap[i+2];
+
+    for(j = 0; j < image_count; j++) {
+      unsigned char first_byte = shadows[j]->bitmap[i] >> 3;
+      unsigned char second_byte = shadows[j]->bitmap[i+1] >> 3;
+      unsigned char third_byte = shadows[j]->bitmap[i+2] >> 3;
+
+      // while(shadow_is_ld_k3(first_byte, second_byte, shadow_bytes, j)) {
+      //   randomize_byte_shadow(&first_byte);
+      // }
+
+      shadow_bytes[j][0] = first_byte;
+      shadow_bytes[j][1] = second_byte;
+      shadow_bytes[j][2] = third_byte;
+
+      int secret_number = first_byte * secret_bytes[0] + second_byte * secret_bytes[1] + third_byte * secret_bytes[2];
+      secret_number = secret_number % 251;
+      shadows[j]->bitmap[i] &= 0xF8; // 1111 1000
+      shadows[j]->bitmap[i] |= (secret_number >> 5);
+      shadows[j]->bitmap[i+1] &= 0xF8; 
+      shadows[j]->bitmap[i+1] |= (secret_number & 0x1C) >> 2; // 0001 1100 >> 2
+      shadows[j]->bitmap[i+2] &= 0xF8; 
+      // falta agregarle el bit de paridad!
+      shadows[j]->bitmap[i+2] |= (secret_number & 0X03); 
+    } 
+  } 
+}
 
 /*
 **
@@ -223,7 +246,7 @@ recover_block2(image_t * secret_image, image_t ** images, int block_position, in
     }
 
     if (coefficients[1][0] != 0 || coefficients[1][1] == 0) {
-        printf("Something went wrong with the equations!\n");
+        printf("Something went wrong with the equations!\n"); 
     }
 
     unsigned char y = (coefficients[1][2] * modular_inverse(coefficients[1][1])) % 251;
