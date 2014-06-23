@@ -160,7 +160,6 @@ void hide_3(image_t** shadows, image_t* secret, int image_count) {
       shadows[j]->bitmap[i+1] &= 0xF8; 
       shadows[j]->bitmap[i+1] |= (secret_number & 0x1C) >> 2; // 0001 1100 >> 2
       shadows[j]->bitmap[i+2] &= 0xF8; 
-      // falta agregarle el bit de paridad!
       shadows[j]->bitmap[i+2] |= (secret_number & 0X03); 
 
       char * parity_check = calloc((sizeof(unsigned char) * 3) + 1, 1);
